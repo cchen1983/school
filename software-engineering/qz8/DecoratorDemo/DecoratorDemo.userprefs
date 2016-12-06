@@ -1,0 +1,21 @@
+﻿<Properties StartupConfiguration="{D45026B1-71A5-4136-921C-EE35B6990C6F}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
+    <Files>
+      <File FileName="Program.cs" Line="260" Column="6" />
+      <File FileName="IBeverage.cs" Line="7" Column="27" />
+      <File FileName="ICondimentDecorator.cs" Line="7" Column="3" />
+      <File FileName="Espresso.cs" Line="22" Column="1" />
+      <File FileName="HouseBlend.cs" Line="4" Column="1" />
+      <File FileName="Mocha.cs" Line="35" Column="1" />
+      <File FileName="DarkRoast.cs" Line="8" Column="33" />
+      <File FileName="Soy.cs" Line="38" Column="5" />
+      <File FileName="Whip.cs" Line="38" Column="5" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.DecoratorDemo PreferredExecutionTarget="MonoDevelop.Default" />
+</Properties>

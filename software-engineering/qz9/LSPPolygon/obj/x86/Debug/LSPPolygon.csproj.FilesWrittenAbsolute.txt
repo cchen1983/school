@@ -1,0 +1,5 @@
+/Users/rOugher/workspace/se/qz9/LSPPolygon/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/rOugher/workspace/se/qz9/LSPPolygon/bin/Debug/LSPPolygon.exe.mdb
+/Users/rOugher/workspace/se/qz9/LSPPolygon/bin/Debug/LSPPolygon.exe
+/Users/rOugher/workspace/se/qz9/LSPPolygon/obj/x86/Debug/LSPPolygon.exe
+/Users/rOugher/workspace/se/qz9/LSPPolygon/obj/x86/Debug/LSPPolygon.exe.mdb

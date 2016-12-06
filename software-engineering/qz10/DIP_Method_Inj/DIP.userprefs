@@ -1,0 +1,18 @@
+﻿<Properties StartupConfiguration="{C7A5AC89-1E2A-4573-BEAB-13692BCCF5B8}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="BroadcastResult.cs">
+    <Files>
+      <File FileName="Program.cs" Line="26" Column="29" />
+      <File FileName="EmailMsg.cs" Line="15" Column="28" />
+      <File FileName="DIPException.cs" Line="6" Column="22" />
+      <File FileName="ScreenMsg.cs" Line="2" Column="14" />
+      <File FileName="BroadcastResult.cs" Line="6" Column="25" />
+      <File FileName="IMsg.cs" Line="6" Column="3" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.DIP__Meth__Inj PreferredExecutionTarget="MonoDevelop.Default" />
+</Properties>

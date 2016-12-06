@@ -1,0 +1,1172 @@
+#####################################################################################
+# models.py of Data models
+
+# Data Models
+# cchen @ 2016.09.02
+
+from django.db import models
+from django.contrib.auth.models import User
+
+from django.core.exceptions import ObjectDoesNotExist
+
+import re
+import os
+
+TBL_NAME_LIST = [
+    'Customer',
+    'Membership',
+    'Product',
+    'Purchasing',
+    'Expenditure',
+    'Discount',
+    'Promotion',
+]
+
+class Customer(models.Model):
+    name = models.CharField(max_length=32)
+    phone = models.CharField(max_length=32)
+    address = models.CharField(max_length=255)
+    gender = models.CharField(max_length=16)
+    birthday = models.DateField()
+    
+    # cchen @ 2016.09.10:
+    #   Add unique constraints for name+phone combination 
+    class Meta:
+        unique_together = ('name', 'phone')
+
+class Membership(models.Model):
+    regDate = models.DateField(auto_now_add=True)
+    balance = models.DecimalField(max_digits=19, decimal_places=2)
+    passphrase = models.CharField(max_length=32)
+    customerNo = models.ForeignKey(Customer, related_name='membership', null=True, on_delete=models.SET_NULL)
+
+class Product(models.Model):
+    name = models.CharField(max_length=32)
+    count = models.BigIntegerField(null=True)
+    price = models.DecimalField(max_digits=19, decimal_places=2)
+    details = models.CharField(max_length=255)
+
+class Purchasing(models.Model):
+    productNo = models.ForeignKey(Product, related_name='pur_prod', null=True, on_delete=models.SET_NULL)
+    membershipNo = models.ForeignKey(Membership, related_name='pur_member', null=True, on_delete=models.SET_NULL)
+    count = models.BigIntegerField(null=True)
+    payment = models.DecimalField(max_digits=19, decimal_places=2)
+    dtime = models.DateTimeField(auto_now_add=True)
+    
+class Expenditure(models.Model):
+    dtime = models.DateTimeField(auto_now_add=True)
+    payment = models.DecimalField(max_digits=19, decimal_places=2)
+    details = models.CharField(max_length=255)
+    productNo = models.ForeignKey(Product, related_name='buyingIn', blank=True, null=True, on_delete=models.SET_NULL)
+    count = models.BigIntegerField(null=True)
+
+TGT_ALL = 'All'
+TGT_MEMBER = 'Member'
+TGT_BD = 'Birthday' 
+
+#PROMO_N_GET_1 = 'PM_N1'     # Promotion Buy N get 1
+#PROMO_DISCOUNT = 'PM_DC'    # Promotion Discount
+
+# cchen @ 20161009
+class Activity(models.Model):
+    valid_from = models.DateTimeField(auto_now_add=True)
+    valid_to = models.DateTimeField(auto_now_add=True)
+    details = models.CharField(max_length=255)
+    target = models.CharField(max_length=32)
+
+# saheed @ 20161010
+# Discount for all products 
+class Discount(Activity):
+    disc = models.DecimalField(max_digits=19, decimal_places=2)
+
+    def save(self):
+        Discount.objects.all().delete()
+        super(Discount, self).save()
+        
+# Yihang Zhao @  20161011       
+# Promotion for specific product
+class Promotion(Activity):
+    productNo = models.ForeignKey(Product, related_name='promotion', blank=True, null=True, on_delete=models.SET_NULL)
+    n1 = models.BigIntegerField(null=True)
+    #pmType = models.CharField(max_length=32) 
+    #discount = models.DecimalField(max_digits=19, decimal_places=2, null=True)
+
+    def save(self):
+        try:
+            try:
+                self.productNo.promotion.get()
+                print 'replace the promotion of ' + self.productNo.name
+                self.productNo.promotion.clear() 
+            except ObjectDoesNotExist:
+                print 'place the promotion of ' + self.productNo.name
+        except ObjectDoesNotExist:
+            print 'specified product not exist.'
+
+        super(Promotion, self).save()
+
+
+#####################################################################################
+# view.py of Workflow Page
+
+# Django View Handler for Workflow page
+# cchen @ 2016.09.09
+
+import sys
+import datetime
+from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse, Http404
+from django.template import RequestContext, loader
+from django.contrib.auth.decorators import login_required
+
+from django.core.exceptions import ObjectDoesNotExist
+
+#from mysqlUtils import dbQuery
+
+from query.models import *
+
+import datetime
+from decimal import Decimal
+
+@login_required
+def index(request):
+    return render(request, 'workflow/index.html')
+
+# Membership Verification
+@login_required
+def check_membership(request):
+    membershipNo = request.POST.get('membershipNo')
+    resp = ''
+    try:
+        res = Membership.objects.get(id=membershipNo)
+        resp = res.balance
+    except:
+        resp = 'NotExist'
+
+    return HttpResponse(resp)
+
+# Working Form Render
+@login_required
+def reg_form_view(request):
+    tp = request.GET.get('type')
+    if tp == 'mem_new':
+        return render(request, 'workflow/member_new.html')
+    elif tp == 'mem_rec':
+        return render(request, 'workflow/member_recharge.html')
+    elif tp == 'exp_prod':
+        products = Product.objects.all()
+        return render(request, 'workflow/exp_product.html', {'products': products})
+    elif tp == 'exp_other':
+        return render(request, 'workflow/exp_other.html')
+    elif tp == 'prc_new':
+        products = Product.objects.all()
+        return render(request, 'workflow/prc_new.html', {'products': products})
+    elif tp == 'act_promo':
+        products = Product.objects.all()
+        return render(request, 'workflow/act_promo.html', {'products': products})
+    elif tp == 'act_discount':
+        return render(request, 'workflow/act_discount.html')
+
+# Membership register handler
+@login_required
+def add_new_member(request):
+    name = request.POST.get('name')
+    phone = request.POST.get('phone')
+    gender = request.POST.get('gender')
+    birthday = request.POST.get('birthday')
+    balance = request.POST.get('balance')
+    passphrase = request.POST.get('passphrase')
+    address = request.POST.get('address')
+    
+    resp = 'OK'
+
+    try:
+        cus = Customer(name=name, phone=phone, address=address, gender=gender, birthday=birthday)
+        print cus, cus.name, cus.phone, cus.address, cus.gender, cus.birthday
+        cus.save()
+        print 'cus save ok.'
+        mem = Membership(balance=balance, passphrase=passphrase, customerNo=cus)
+        print mem
+        mem.save() 
+        print 'mem save ok'
+    except:
+        print >> sys.stderr, traceback.format_exc()
+        resp = 'create member error'
+
+    return HttpResponse(resp)
+
+# Membership balance recharging
+@login_required
+def member_recharge(request):
+    membershipNo = request.POST.get('membershipNo')
+    balance = request.POST.get('balance')
+    
+    resp = 'OK'
+
+    try:
+        mem = Membership.objects.get(id=membershipNo)
+        mem.balance = mem.balance + Decimal(balance)
+        mem.save()
+    except:
+        print >> sys.stderr, traceback.format_exc()
+        resp = 'recharge error'    
+
+    return HttpResponse(resp)
+
+# Products new/update handler 
+@login_required
+def exp_product_reg(request):
+    resp = 'OK'
+    needUpdate = True
+
+    productNo = request.POST.get('product')
+    count = request.POST.get('count')
+    details = request.POST.get('details')
+    print productNo, count, details
+    try:
+        if productNo == "new":
+            new_name = request.POST.get('product_new')
+            new_price= request.POST.get('product_price')
+            prod = Product(name=new_name, price=new_price, count=count)
+            prod.save()
+            productNo = prod.id
+            needUpdate = False
+
+        payment = request.POST.get('payment')
+        prod = Product.objects.get(id=productNo)
+        exp = Expenditure(payment=payment, details=details, productNo=prod, count=count)
+        exp.save()
+
+        if needUpdate:
+            prod.count = prod.count + long(count)
+            prod.save()
+        
+    except:
+        print >> sys.stderr, traceback.format_exc()
+        resp = 'exp product reg error'
+
+    return HttpResponse(resp)
+
+# Ohter expenditures handler
+@login_required
+def exp_other_reg(request):
+    resp = 'OK'
+
+    payment = request.POST.get('payment')
+    details = request.POST.get('details')
+    
+    try:
+        exp = Expenditure(payment=payment, details=details)
+        exp.save()
+    except:
+        print >> sys.stderr, traceback.format_exc()
+        resp = 'exp other reg error'
+
+    return HttpResponse(resp)
+
+# Customer Purchasing Handler
+@login_required
+def purc_reg(request):
+    resp = 'OK'
+    productNo = request.POST.get('product')
+    price = Decimal(request.POST.get('price'))
+    count = request.POST.get('count')
+    membershipNo = request.POST.get('membershipNo')
+    payment = Decimal(request.POST.get('payment'))
+    balance = Decimal(0)
+    mem = None
+
+    if membershipNo:
+        mem = Membership.objects.get(id=membershipNo)
+        balance = mem.balance
+
+    charge = price * int(count)
+    bcharge = charge - payment
+
+    if mem:
+        mem.balance = balance - bcharge
+        mem.save()
+
+    prod = Product.objects.get(id=productNo)
+    prod.count = prod.count - int(count) 
+    prod.save()
+
+    pur = Purchasing(productNo=prod, membershipNo=mem, count=count, payment=charge)
+    pur.save()
+
+    return HttpResponse(resp)
+
+# Yihang Zhao @ 20161018
+# New Promotion Handler
+@login_required
+def act_promo_reg(request):
+    resp = 'OK'
+    productNo = request.POST.get('product')
+    n1 = request.POST.get('n1')
+    details = request.POST.get('details')
+    valid_from = request.POST.get('valid_from')
+    valid_to = request.POST.get('valid_to')
+    target = request.POST.get('target')
+
+    prod = Product.objects.get(id=productNo)
+    promo = Promotion(productNo=prod, n1=n1, valid_from=valid_from, valid_to=valid_to, details=details, target=target)
+    promo.save()
+    return HttpResponse(resp)
+
+# Saheed @ 20161019
+# New Discount Handler
+@login_required
+def act_discount_reg(request):
+    resp = 'OK'
+    discount = request.POST.get('discount')
+    details = request.POST.get('details')
+    valid_from = request.POST.get('valid_from')
+    valid_to = request.POST.get('valid_to')
+    target = request.POST.get('target')
+
+    try:
+        print discount, valid_from, valid_to, target, details
+        dis = Discount(disc=discount, valid_from=valid_from, valid_to=valid_to, details=details, target=target)
+        dis.save()
+    except:
+        resp = sys.exc_info()[0]
+        print "Unexpected error:", sys.exc_info()
+        
+    return HttpResponse(resp)
+
+# cchen @ 20161020
+# Query discount and promotion info
+@login_required
+def act_info_get(request):
+    productNo = request.POST.get('product')
+
+    n1 = 0
+    disc = 1.0
+    promo_tgt = 'All'
+    disc_tgt = 'All'
+
+    try:
+        today = datetime.datetime.now().date()
+
+        # get active discount info
+        dclist = Discount.objects.all()
+        active_discount = None
+        if len(dclist) > 0:
+            active_discount = dclist[0]
+        if active_discount and active_discount.valid_from.date() <= today and active_discount.valid_to.date() >= today:
+            disc_tgt = active_discount.target
+            disc = active_discount.disc
+
+        # get promotion info for selected product
+        promo = Promotion.objects.get(productNo=productNo)
+        print promo
+        if promo.valid_from.date() <= today and promo.valid_to.date() >= today:
+            promo_tgt = promo.target
+            n1 = promo.n1
+
+    except:
+        print "act_info_get:", sys.exc_info()[0] 
+ 
+
+    return JsonResponse({"n1": n1, "disc": disc, "promo_tgt":promo_tgt, "disc_tgt":disc_tgt}) 
+
+
+#####################################################################################
+# view.py of Query Page
+
+# Django View Handler for Query Page
+# cchen @ 2016.9.6
+
+from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse, Http404
+from django.template import RequestContext, loader
+from django.contrib.auth.decorators import login_required
+
+#from mysqlUtils import dbQuery
+
+from query.models import *
+
+import datetime
+
+def isModelInstance(x):
+    for c in TBL_NAME_LIST:
+        if isinstance(x, eval(c)):
+            return True
+    return False
+
+# Search by condition
+@login_required
+def cond_query(request):
+    fdName = request.POST.get('fdName')
+    fdValue = request.POST.get('fdValue')
+    tblName = request.POST.get('tblName')
+    objs = []
+    if fdValue[:1] == '>':
+        objs = eval(tblName).objects.filter(**{fdName + '__gt':fdValue[1:]})
+    elif fdValue[:1] == '<':
+        objs = eval(tblName).objects.filter(**{fdName + '__lt':fdValue[1:]})
+    else:
+        regex = '(' + str(fdValue) + ')+'
+        objs = eval(tblName).objects.filter(**{fdName + '__regex':regex})
+
+    fields = eval(tblName)._meta.fields
+    fieldNames = []
+    for fd in fields:
+        fieldNames.append(fd.name)
+    
+    tuples = []
+    for obj in objs:
+        tp = []
+        for name in fieldNames:
+            o = getattr(obj, name)
+            if isModelInstance(o):
+                # Just show id for foreginkey object
+                o = o.id
+            elif isinstance(o, datetime.date) or isinstance(o, datetime.datetime):
+                o = str(o)
+            tp.append(o)
+        tuples.append(tp)
+
+    return render(request, 'query/tableview.html', {'fdNames':fieldNames, 'tuples':tuples})
+
+@login_required
+def index(request):
+    return render(request, 'query/index.html', {'tbls':TBL_NAME_LIST})
+
+# Retrieving meta-data of requested model
+@login_required
+def get_meta_fields(request):
+    tblName = request.POST.get('tblName')
+    fields = eval(tblName)._meta.fields
+    fieldNames = []
+    for fd in fields:
+        fieldNames.append(fd.name)
+    return JsonResponse(fieldNames, safe=False)
+
+# Update user input to database
+@login_required
+def tuple_update(request):
+    tblName = request.POST.get('tblName')
+    fields = eval(tblName)._meta.fields
+    tp = request.POST.getlist('tuple[]')
+    tpId = tp[0]
+    resp = 'OK' 
+
+    try:
+        obj = eval(tblName).objects.get(id=tpId)
+        idx = 0
+        for fd in fields:
+            print idx, fd.name
+            print getattr(obj, fd.name)
+            print isModelInstance(getattr(obj, fd.name))
+            if idx > 0 and not isModelInstance(getattr(obj, fd.name)):
+                # Filter the foreginkey object out of iteration
+                print fd.name, tp[idx]
+                setattr(obj, fd.name, tp[idx])
+            idx = idx + 1
+        obj.save()
+    except Exception:
+        print >> sys.stderr, traceback.format_exc()
+        resp = 'submit error.'
+
+    return HttpResponse(resp)
+
+
+# Recover database from specified date backup
+@login_required
+def restore_date(request):
+    resp = 'Restore successes!'
+
+    try:
+        bak_date = request.POST.get('bak_date')
+        print 'restore from backup date: ' + bak_date
+        call_command('loaddata', str(bak_date) + '.json', verbosity=3, interactive=False)
+    except:
+        resp = sys.exc_info()[0]
+
+    return HttpResponse(resp)
+
+# Backup database of current date
+@login_required
+def backup_date(request):
+    resp = "Backup successes!"
+
+    try:
+        today = datetime.datetime.now().date() 
+        #call_command('dumpdata', '>', str(today) + '.json', verbosity=3, interactive=False)        
+        subprocess.check_call("./manage.py dumpdata > " + str(today) + ".json", shell=True)
+    except:
+        resp = sys.exc_info()[0]    
+    
+    return HttpResponse(resp)
+
+
+#####################################################################################
+# login.py
+
+# cchen @ 2016.08.30
+# User Account Login/Register Handler
+
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.template import RequestContext, loader
+
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+
+from django.contrib.auth.decorators import login_required
+
+def login_box(request):
+    if request.method == 'POST':
+        resp_msg = 'OK'
+        if request.POST.get('Login'):
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+        
+            user = authenticate(username = username, password = password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    if not request.POST.get('remember', None):
+                        request.session.set_expiry(0)
+                else:
+                    resp_msg = 'DISABLED'
+            else:
+                resp_msg = 'Error'
+
+        elif request.POST.get('Register'):
+            username = request.POST.get('newusername')
+            password = request.POST.get('npassword')
+            email = request.POST.get('email')
+
+            # Check if the user name exsists. 
+            try:
+                User.objects.get(username = username)
+                resp_msg = 'USER_EXIST'
+                User.objects.get(email = email)
+                resp_msg = 'EMAIL_EXIST'
+            except User.DoesNotExist:
+                print "new user applying..." 
+
+            if resp_msg == 'OK':
+                try:
+                    validate_email(email)
+                    User.objects.create_user(username, email, password)
+                    user = authenticate(username = username, password = password)
+                    if user is not None:
+                        login(request, user)
+                    else:
+                        resp_msg = 'Error'
+                except ValidationError:
+                    resp_msg = "EMAIL_INVALID"
+        else:
+            resp_msg = 'Error'
+
+        return login_ajax_response(request, resp_msg)
+    else:
+        return render(request, 'login/login.html')
+
+def login_ajax_response(request, msg):
+    return render(request, 'login/login_ajax_response.html', {'msg': msg})
+
+@login_required
+def logout_page(request):
+    logout(request);
+    return redirect('/')
+
+@login_required
+def account_settings(request):
+    if request.method == 'POST':
+        password = request.POST.get('npassword')
+        resp_msg = 'OK'
+        try:
+            request.user.set_password(password);
+            request.user.save();
+        except:
+            resp_msg = 'Error'
+
+        return login_ajax_response(request, resp_msg)
+    else:
+        return render(request, 'login/account_settings.html')
+
+
+#####################################################################################
+# query/tests.py
+
+# Unittest for DataModel
+# cchen @ 2016.11.23
+
+import sys
+import datetime
+
+from django.test import TestCase
+from query.models import *
+
+class QueryTestCase(TestCase):
+    def setUp(self):
+        today = datetime.datetime.now().date()
+
+        c1 = Customer(name="tony",phone="1234567890",address="address_tony",gender="Male", birthday=today)
+        c2 = Customer(name="jamail",phone="2234567890",address="address_jamial",gender="Male", birthday=today)
+        c3 = Customer(name="hanbing",phone="3234567890",address="address_hanbing",gender="Female", birthday=today)
+        c1.save()
+        c2.save()
+        c3.save()
+
+        m1 = Membership(balance=100, passphrase='pwd_tony', customerNo=c1)
+        m2 = Membership(balance=100, passphrase='pwd_hanbing', customerNo=c3)
+        m1.save()
+        m2.save()        
+
+    def test_membership_check(self):
+        c1 = Customer.objects.get(name="tony")
+        c2 = Customer.objects.get(name="jamail")
+        c3 = Customer.objects.get(name="hanbing")
+
+        self.assertTrue(len(Membership.objects.filter(customerNo=c1)) >= 1, msg="Customer1 is a member.")
+        self.assertFalse(len(Membership.objects.filter(customerNo=c2)) >= 1, msg="Customer2 is not a member.")
+        self.assertTrue(len(Membership.objects.filter(customerNo=c3)) >= 1, msg="Customer3 is a member.")
+
+
+    def test_purchasing(self):
+        p1 = Product.objects.create(name="coke", count=20, price=2.0, details="None")
+        p2 = Product.objects.create(name="cupcake", count=20, price=3.0, details="None")
+        p3 = Product.objects.create(name="chip", count=20, price=2.0, details="None")
+        
+        old = p1.count;
+        p1.count = p1.count - 3
+        payment = 6.0
+        pur1 = Purchasing(productNo=p1, count=3, payment=payment)
+        p1.save()
+        pur1.save()
+
+        self.assertEqual(payment, p1.price*3, msg="Payment of 3 cups of coke should be " + str(p1.price*3))
+        self.assertEqual(p1.count, old - 3, msg="The count should be reduced by 3.")
+
+        old = p2.count;
+        p2.count = p2.count - 10
+        payment = p2.price * 10
+        pur2 = Purchasing(productNo=p2, count=10, payment=payment)
+        p2.save()
+        pur2.save()
+
+        self.assertEqual(payment, p2.price*10, msg="Payment of 10 cupcakes should be " + str(p2.price*10))
+        self.assertEqual(p2.count, old - 10, msg="The count should be reduced by 10.")
+
+
+
+#####################################################################################
+# query_edit.js for Query & Edit page
+
+/* Saheed @ 2016.09.06
+ * Query: Advance searching and editing of Data Models 
+ */
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+//CSRF Protection: csrf token insert
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$(function() {
+    function tbl_sel_query() {
+        tblName = $("#tbl_sel").val();
+        $.ajax({
+            type: "POST",
+            url: "/query/get-meta/",
+            data: {"tblName" : tblName},
+
+            success: function(data) {
+                $("#fd_sel").empty(); /*Clear previous records*/
+                for (var i in data){
+                    $("#fd_sel").append($("<option/>", {value:data[i], text:data[i]}));
+                }
+                console.log($("#fd_sel"));
+                $("#query_submit").show() 
+            }
+        });
+    }
+
+    $("#tbl_sel").change(tbl_sel_query);
+
+    $('#query_form').submit(function(e) {
+        $.ajax({
+            type: "POST",
+            url: "/query/cond-query/",
+            data: $(this).serialize(),
+            
+            success: function(html) {
+                $("#table_view").html(html);
+            }
+        });        
+
+        return false;
+    });
+});
+
+
+#####################################################################################
+# workflow.js of Workflow Page
+
+/* Yihang Zhao @ 2016.09.03
+ * Workflow JS:
+ *   Perparing working forms
+ */
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+//CSRF Protection: csrf token insert
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$(function() {
+    function reg_form_get(e) {
+        /*Form Rendering*/
+        $.ajax({
+            type: "GET",
+            url: "/workflow/reg-form-view/",
+            data: e.data,
+            success: function(html) {
+                $("#" + e.data.cls + "-reg-view").html(html);
+            }
+        });
+    }
+
+    $('#btn_prc_new').click({"type": "prc_new", "cls": "prc"},reg_form_get);
+    $('#btn_memb_new').click({"type": "mem_new", "cls": "mem"},reg_form_get);
+    $('#btn_memb_recharge').click({"type": "mem_rec", "cls": "mem"}, reg_form_get);
+    $('#btn_exp_product').click({"type": "exp_prod", "cls": "exp"}, reg_form_get);
+    $('#btn_exp_other').click({"type": "exp_other", "cls": "exp"}, reg_form_get);
+    $('#btn_act_promo').click({"type": "act_promo", "cls": "act"}, reg_form_get);
+    $('#btn_act_discount').click({"type": "act_discount", "cls": "act"}, reg_form_get);
+});
+
+
+#####################################################################################
+# login.js for User Login
+
+/* cchen @ 2016.09.01
+ * User Account Login/Signup
+ */
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+//CSRF Protection: csrf token insert
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$(function() {
+
+    /*show up*/
+    $(".login_required").fancybox({
+        href:   '/login/',
+        type:   'ajax',
+
+        /* style */
+        width:  500,
+        //Height: 600,
+        fitToView:  false,
+        //autoSize:   false,
+
+        /*cchen Notes: fancybox content could only be selected after show, 
+        *jquery object or doms are not ready at the timing of afterLoad*/
+        afterShow:  function() {
+           hook();
+        },
+
+        afterClose: function() {
+            if ($.fancybox.login_ok) {
+                window.location = $.fancybox.next;
+            }
+        }
+    });
+
+    $(".login_required").click(function(e){
+        /*hold on the original request*/
+        $.fancybox.next = $(this).attr('href');
+    });
+ 
+    /*callbacks*/ 
+    function hook() {
+
+        $(".btn").click(function(){
+            this.blur();    //remove focus
+        });
+
+        /*submit*/
+        $("#login_form").submit(function(){
+            $.ajax({
+                type:   "POST",
+                url:    "/login/",
+                data:   $("#login_form").serialize(),
+
+                success:    function(html) {
+                    resp = $.trim(html)
+                    if (resp == "OK") {
+                        $.fancybox.login_ok = true;
+                        $.fancybox.close();
+                    }
+                    else if (resp == "DISABLED") {
+                        $("#login_error").text("The specified user has been disabled.");
+                        $("#login_error").show();
+                        $.fancybox.update();
+                    }
+                    else {
+                        $("[name=password]").val("");
+                        $("#login_error").text("Invalid user or password.");
+                        $("#login_error").show();
+                        $.fancybox.update();
+                    }
+                }
+
+            });           
+            return false; 
+        });        
+
+        $("#register_form").submit(function(){
+            user = $("[name=newusername]").val();
+            pwd = $("[name=npassword]").val();
+            email = $("[name=email]").val();
+            cpwd = $("[name=cpassword]").val();
+            valid = true;
+
+            if (user == "" || pwd == "" || email == "" || cpwd == "") {
+                $("#register_error").text("Please fill all field.");
+                $("#register_error").show();
+                valid = false;
+            }
+
+            if (pwd != cpwd) {
+                $("[name=password]").val("");
+                $("[name=cpassword]").val("");
+                $("#mismatch_error").show();
+                valid = false;
+            }
+            else {
+                $("#mismatch_error").hide();
+            }
+
+            if (!valid) {
+                $.fancybox.update();
+            }
+            else {
+                $.ajax({
+                    type:   "POST",
+                    url:    "/login/",
+                    data:   $("#register_form").serialize(),
+
+                    success:    function(html) {
+                        emsg = "";
+                        switch ($.trim(html)) {
+                            case "OK":
+                                $.fancybox.login_ok = true;
+                                break;
+                            case "USER_EXIST":
+                                emsg = "Username has existed.";
+                                break;
+                            case "EMAIL_EXIST":
+                                emsg = "Email has existed.";
+                                break;
+                            case "EMAIL_INVALID":
+                                emsg = "Invalid email address.";
+                                break;
+                            default:
+                                emsg = "Unknown error.";
+                        }
+
+                        if (emsg == "") {
+                            $.fancybox.close();
+                        }
+                        else {
+                            $("#register_error").text(emsg);
+                            $("#register_error").show();
+                            $.fancybox.update();
+                        }
+                    } 
+
+                });
+            }
+            return false;
+        });  //end register-form submit
+    
+    }
+
+});
+
+
+#####################################################################################
+# Purchasing page interactive js
+
+$(function() {      // cchen @ 20160913 @ For Purchasing page interaction.
+    
+    $('#prod_sel').change(function(){
+        var price = $('#prod_sel option:selected').data('price');
+        var count = $('[name="count"]').val();
+        console.log($('#prod_sel option:selected'));
+        console.log(price, count);
+        $('[name="price"]').val(price);
+        $('[name="payment"]').val(count * price)
+    });
+
+    $('[name="count"]').change(function(){
+        var count = $('[name="count"]').val();
+        var price = $('[name="price"]').val()
+        $('[name="payment"]').val(count * price)
+    });
+
+    $('#prc_reg_form').submit(function(e) {
+        var error_happens = false;
+        var data = $(this).serialize();
+        var balance = 0;
+
+        e.preventDefault();
+
+        var memNo = $('[name="membershipNo"]').val();
+        var payment = $('[name="payment"]').val();
+        var price = $('[name="price"]').val();
+        var count = $('[name="count"]').val();
+        var disc = 1.0;
+        var n1 = 0;
+        var disc_tgt = 'All';
+        var promo_tgt = 'All';
+        var thres = price * count;
+
+        // Saheed @ 20161015
+        // Check Discount and Promotion info for the product
+        $.ajax({
+            type: "POST",
+            url: "/workflow/act-info-get/",
+            data: data,
+            async: false,
+            timeout: 3000,
+        
+            success: function(json) {
+                console.log(json);
+                disc = json.disc;
+                n1 = json.n1;
+                disc_tgt = json.disc_tgt;
+                promo_tgt = json.promo_tgt;
+
+                // update the payment threshold
+                if (n1 > 0 && count >= n1) {
+                    thres = (count - 1) * price;
+                }
+                else if (disc < 1.0) {
+                    thres = count * price * disc;
+                }
+            },
+        });
+
+        if (memNo) {    // Membership Validation
+            $.ajax({
+                type: "POST",
+                url: "/workflow/check-membership/",
+                data: {"membershipNo": memNo},
+                async: false,
+                timeout: 3000,
+
+                error: function() {
+                    $("#register_error").text('Membership ID verification timeout!');
+                    $("#register_error").show()
+                    error_happens = true;
+                },
+
+                success: function(resp) {
+                    if (resp == 'NotExist') {
+                        $("#register_error").text('Membership ID not exist!');
+                        $("#register_error").show()
+                        error_happens = true;
+                    }
+                    else{
+                        balance = resp;
+                    }
+                }
+            });
+        }
+        else if (payment < thres) {   // Payment amount validation
+            $("#register_error").text('Not enough payment amount!');
+            $("#register_error").show()
+            error_happens = true
+        }
+
+        if (memNo && ((balance + payment) < thres)) {  // Payment + Account Balance Validation
+            $("#register_error").text('Not enough payment+balance!');
+            $("#register_error").show()
+            error_happens = true
+        }
+        console.log(count, $('#prod_sel option:selected').data('count'));
+        if (count > $('#prod_sel option:selected').data('count')) {
+            $("#register_error").text('The count of stock not enough: ' + $('#prod_sel option:selected').data('count'));
+            $("#register_error").show()
+            error_happens = true
+        }
+ 
+        if (!error_happens) {  // Validate purchasing.
+            $.ajax({
+                type: "POST",
+                url: "/workflow/purc-reg/",
+                data: data,
+
+                success: function(resp) {
+                    if (resp == 'OK') {
+                        $("#prc-reg-view").html("Purchase successed!");
+                    }
+                    else {
+                        $("#register_error").text('error' + resp);
+                        $("#register_error").show()
+                    }
+                }
+            });
+        }
+        
+        return false;
+    });
+});
+
+
+#####################################################################################
+# System Database Backup & Restore page interactive js
+
+
+/* Yihang Zhao @ 2016.11.12
+ * Query: Advance searching and editing of Data Models 
+ */
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+//CSRF Protection: csrf token insert
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$(function() {
+    $('#btn_backup').click(function(e) {
+        $.ajax({
+            type: "POST",
+            url: "/query/backup-date/",
+            data: $(this).serialize(),
+
+            success: function(resp) {
+                    $("#backup_error").text(resp);
+                    $("#backup_error").show()
+            },
+
+            error: function() {
+                    $("#backup_error").text('Unknown server error.');
+                    $("#backup_error").show()
+            }
+        });
+    });
+
+    $('#restore_form').submit(function(e) {
+        $.ajax({
+            type: "POST",
+            url: "/query/restore-date/",
+            data: $(this).serialize(),
+            
+            success: function(resp) {
+                    $("#restore_error").text(resp);
+                    $("#restore_error").show()
+            },
+
+            error: function() {
+                    $("#register_error").text('Unknown server error.');
+                    $("#register_error").show()
+            }
+        });        
+
+        return false;
+    });
+});

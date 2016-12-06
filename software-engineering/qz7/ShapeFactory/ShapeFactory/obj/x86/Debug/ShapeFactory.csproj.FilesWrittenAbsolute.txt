@@ -1,0 +1,5 @@
+/Users/rOugher/workspace/se/qz7/ShapeFactory/ShapeFactory/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/rOugher/workspace/se/qz7/ShapeFactory/ShapeFactory/bin/Debug/ShapeFactory.exe.mdb
+/Users/rOugher/workspace/se/qz7/ShapeFactory/ShapeFactory/bin/Debug/ShapeFactory.exe
+/Users/rOugher/workspace/se/qz7/ShapeFactory/ShapeFactory/obj/x86/Debug/ShapeFactory.exe
+/Users/rOugher/workspace/se/qz7/ShapeFactory/ShapeFactory/obj/x86/Debug/ShapeFactory.exe.mdb

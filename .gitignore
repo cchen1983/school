@@ -1,0 +1,8 @@
+*.o
+*.a
+*.swp
+*.swo
+*.db
+*.bak
+*.pyc
+.DS_Store

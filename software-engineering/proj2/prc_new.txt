@@ -1,0 +1,169 @@
+<div class="container" style="width:450px;height:400px;">
+    <div id="register">
+        <form method="POST" id="prc_reg_form">{% csrf_token %}
+            <div><label>Customer Purchasing</label></div>
+            <div class="form-group">
+                <label>Stock</label>
+                <select id="prod_sel" name="product" class="form-control" required>
+                    <option disabled selected value> -- select an product -- </option>
+                    {% for prod in products %}
+                    <option value="{{prod.id}}" data-count="{{prod.count}}" data-price="{{prod.price}}">{{prod.name}}</option>
+                    {% endfor %}
+                </select>
+            </div> 
+            <div class="form-group">
+                <label>Price</label>
+                <input name="price" type="text" class="form-control" value="0.00" readonly>
+            </div>
+            <!--div class="form-group">
+                <label>会员折扣</label>
+                <input name="discount" type="text" class="form-control" value="1.00">
+            </div-->
+            <div class="form-group">
+                <label>Count</label>
+                <input name="count" type="text" class="form-control" value="0">
+            </div>
+            <div class="form-group">
+                <label>Membership ID</label>
+                <input name="membershipNo" type="text" class="form-control" placeholder="Membership ID">
+            </div>
+            <div class="form-group">
+                <label>Payment</label>
+                <input name="payment" type="text" class="form-control" value="0.00">
+            </div>
+            <div class="row">
+                <input name="Register" value="true" type="hidden"></input>
+                <button type="submit" class="btn btn-default">Submit</button>
+                <span id="register_error" class="custom-alert-msg" style="padding: 6px;"></span>
+            <div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(function() {      // cchen @ 20160913 @ For Purchasing page interaction.
+    
+    $('#prod_sel').change(function(){
+        var price = $('#prod_sel option:selected').data('price');
+        var count = $('[name="count"]').val();
+        console.log($('#prod_sel option:selected'));
+        console.log(price, count);
+        $('[name="price"]').val(price);
+        $('[name="payment"]').val(count * price)
+    });
+
+    $('[name="count"]').change(function(){
+        var count = $('[name="count"]').val();
+        var price = $('[name="price"]').val()
+        $('[name="payment"]').val(count * price)
+    });
+
+    $('#prc_reg_form').submit(function(e) {
+        var error_happens = false;
+        var data = $(this).serialize();
+        var balance = 0;
+
+        e.preventDefault();
+
+        var memNo = $('[name="membershipNo"]').val();
+        var payment = $('[name="payment"]').val();
+        var price = $('[name="price"]').val();
+        var count = $('[name="count"]').val();
+        var disc = 1.0;
+        var n1 = 0;
+        var disc_tgt = 'All';
+        var promo_tgt = 'All';
+        var thres = price * count;
+
+        // Saheed @ 20161015
+        // Check Discount and Promotion info for the product
+        $.ajax({
+            type: "POST",
+            url: "/workflow/act-info-get/",
+            data: data,
+            async: false,
+            timeout: 3000,
+        
+            success: function(json) {
+                console.log(json);
+                disc = json.disc;
+                n1 = json.n1;
+                disc_tgt = json.disc_tgt;
+                promo_tgt = json.promo_tgt;
+
+                // update the payment threshold
+                if (n1 > 0 && count >= n1) {
+                    thres = (count - 1) * price;
+                }
+                else if (disc < 1.0) {
+                    thres = count * price * disc;
+                }
+            },
+        });
+
+        if (memNo) {    // Membership Validation
+            $.ajax({
+                type: "POST",
+                url: "/workflow/check-membership/",
+                data: {"membershipNo": memNo},
+                async: false,
+                timeout: 3000,
+
+                error: function() {
+                    $("#register_error").text('Membership ID verification timeout!');
+                    $("#register_error").show()
+                    error_happens = true;
+                },
+
+                success: function(resp) {
+                    if (resp == 'NotExist') {
+                        $("#register_error").text('Membership ID not exist!');
+                        $("#register_error").show()
+                        error_happens = true;
+                    }
+                    else{
+                        balance = resp;
+                    }
+                }
+            });
+        }
+        else if (payment < thres) {   // Payment amount validation
+            $("#register_error").text('Not enough payment amount!');
+            $("#register_error").show()
+            error_happens = true
+        }
+
+        if (memNo && ((balance + payment) < thres)) {  // Payment + Account Balance Validation
+            $("#register_error").text('Not enough payment+balance!');
+            $("#register_error").show()
+            error_happens = true
+        }
+        console.log(count, $('#prod_sel option:selected').data('count'));
+        if (count > $('#prod_sel option:selected').data('count')) {
+            $("#register_error").text('The count of stock not enough: ' + $('#prod_sel option:selected').data('count'));
+            $("#register_error").show()
+            error_happens = true
+        }
+ 
+        if (!error_happens) {  // Validate purchasing.
+            $.ajax({
+                type: "POST",
+                url: "/workflow/purc-reg/",
+                data: data,
+
+                success: function(resp) {
+                    if (resp == 'OK') {
+                        $("#prc-reg-view").html("Purchase successed!");
+                    }
+                    else {
+                        $("#register_error").text('error' + resp);
+                        $("#register_error").show()
+                    }
+                }
+            });
+        }
+        
+        return false;
+    });
+});
+</script>

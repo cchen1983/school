@@ -1,0 +1,17 @@
+﻿<Properties StartupConfiguration="{C0C5DF2C-8C50-484C-BCF8-179CF242F40D}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Drawing.cs">
+    <Files>
+      <File FileName="Program.cs" Line="36" Column="23" />
+      <File FileName="IShape.cs" Line="10" Column="3" />
+      <File FileName="Polygon.cs" Line="8" Column="17" />
+      <File FileName="Circle.cs" Line="64" Column="4" />
+      <File FileName="Drawing.cs" Line="56" Column="4" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.ShapeFactorySRP PreferredExecutionTarget="MonoDevelop.Default" />
+</Properties>

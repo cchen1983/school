@@ -1,0 +1,5 @@
+/Users/rOugher/workspace/se/qz5/delegates/delegates/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/rOugher/workspace/se/qz5/delegates/delegates/bin/Debug/delegates.exe.mdb
+/Users/rOugher/workspace/se/qz5/delegates/delegates/bin/Debug/delegates.exe
+/Users/rOugher/workspace/se/qz5/delegates/delegates/obj/x86/Debug/delegates.exe
+/Users/rOugher/workspace/se/qz5/delegates/delegates/obj/x86/Debug/delegates.exe.mdb

@@ -1,0 +1,13 @@
+start create SV: Wed Dec 02 15:05:25 CST 2015
+end create SV: Wed Dec 02 15:05:26 CST 2015
+Get seismic desc: 600,481,1501
+start i2x: Wed Dec 02 15:05:26 CST 2015
+transposeI2X
+How to debug?xml
+Find the data file
+
+hdfs://172.30.50.2:8020/cchen/Penobscot.a3d
+Total length:1732754400 plane num: 1
+Total splits: 600
+To return in getSplits
+end : Wed Dec 02 15:05:41 CST 2015

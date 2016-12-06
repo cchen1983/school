@@ -1,0 +1,276 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BF3E03BF1D865E790068A4AE /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03BE1D865E790068A4AE /* main.cpp */; };
+		BF3E03C61D865F490068A4AE /* NormalCar.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03C51D865F490068A4AE /* NormalCar.h */; };
+		BF3E03CD1D8660300068A4AE /* RaceCar.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03CC1D8660300068A4AE /* RaceCar.h */; };
+		BF3E03CF1D8660420068A4AE /* VintageCar.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03CE1D8660420068A4AE /* VintageCar.h */; };
+		BF3E03D11D8660A10068A4AE /* Driver.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03D01D8660A10068A4AE /* Driver.h */; };
+		BF3E03D31D8660DF0068A4AE /* RaceDriver.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03D21D8660DF0068A4AE /* RaceDriver.h */; };
+		BF3E03D51D86612A0068A4AE /* Factory.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03D41D86612A0068A4AE /* Factory.h */; };
+		BF3E03D71D8661690068A4AE /* ICar.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03D61D8661690068A4AE /* ICar.h */; };
+		BF3E03D91D86617E0068A4AE /* IDriver.h in Sources */ = {isa = PBXBuildFile; fileRef = BF3E03D81D86617E0068A4AE /* IDriver.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BF3E03B91D865E780068A4AE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		BF3E03BB1D865E780068A4AE /* InterfaceUtilizing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = InterfaceUtilizing; sourceTree = BUILT_PRODUCTS_DIR; };
+		BF3E03BE1D865E790068A4AE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		BF3E03C51D865F490068A4AE /* NormalCar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NormalCar.h; path = ../Car/NormalCar.h; sourceTree = "<group>"; };
+		BF3E03CC1D8660300068A4AE /* RaceCar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RaceCar.h; path = Car/RaceCar.h; sourceTree = SOURCE_ROOT; };
+		BF3E03CE1D8660420068A4AE /* VintageCar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VintageCar.h; path = Car/VintageCar.h; sourceTree = SOURCE_ROOT; };
+		BF3E03D01D8660A10068A4AE /* Driver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Driver.h; path = Driver/Driver.h; sourceTree = SOURCE_ROOT; };
+		BF3E03D21D8660DF0068A4AE /* RaceDriver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RaceDriver.h; path = Driver/RaceDriver.h; sourceTree = SOURCE_ROOT; };
+		BF3E03D41D86612A0068A4AE /* Factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Factory.h; path = ../Factory/Factory.h; sourceTree = "<group>"; };
+		BF3E03D61D8661690068A4AE /* ICar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ICar.h; path = Interface/ICar.h; sourceTree = SOURCE_ROOT; };
+		BF3E03D81D86617E0068A4AE /* IDriver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDriver.h; path = Interface/IDriver.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BF3E03B81D865E780068A4AE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BF3E03B21D865E780068A4AE = {
+			isa = PBXGroup;
+			children = (
+				BF3E03BD1D865E780068A4AE /* InterfaceUtilizing */,
+				BF3E03BC1D865E780068A4AE /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BF3E03BC1D865E780068A4AE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BF3E03BB1D865E780068A4AE /* InterfaceUtilizing */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BF3E03BD1D865E780068A4AE /* InterfaceUtilizing */ = {
+			isa = PBXGroup;
+			children = (
+				BF3E03BE1D865E790068A4AE /* main.cpp */,
+				BF3E03C51D865F490068A4AE /* NormalCar.h */,
+				BF3E03CC1D8660300068A4AE /* RaceCar.h */,
+				BF3E03CE1D8660420068A4AE /* VintageCar.h */,
+				BF3E03D01D8660A10068A4AE /* Driver.h */,
+				BF3E03D21D8660DF0068A4AE /* RaceDriver.h */,
+				BF3E03D41D86612A0068A4AE /* Factory.h */,
+				BF3E03D61D8661690068A4AE /* ICar.h */,
+				BF3E03D81D86617E0068A4AE /* IDriver.h */,
+			);
+			path = InterfaceUtilizing;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BF3E03BA1D865E780068A4AE /* InterfaceUtilizing */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BF3E03C21D865E790068A4AE /* Build configuration list for PBXNativeTarget "InterfaceUtilizing" */;
+			buildPhases = (
+				BF3E03B71D865E780068A4AE /* Sources */,
+				BF3E03B81D865E780068A4AE /* Frameworks */,
+				BF3E03B91D865E780068A4AE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = InterfaceUtilizing;
+			productName = InterfaceUtilizing;
+			productReference = BF3E03BB1D865E780068A4AE /* InterfaceUtilizing */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BF3E03B31D865E780068A4AE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0600;
+				ORGANIZATIONNAME = rOugher;
+				TargetAttributes = {
+					BF3E03BA1D865E780068A4AE = {
+						CreatedOnToolsVersion = 6.0;
+					};
+				};
+			};
+			buildConfigurationList = BF3E03B61D865E780068A4AE /* Build configuration list for PBXProject "InterfaceUtilizing" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = BF3E03B21D865E780068A4AE;
+			productRefGroup = BF3E03BC1D865E780068A4AE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BF3E03BA1D865E780068A4AE /* InterfaceUtilizing */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BF3E03B71D865E780068A4AE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF3E03D71D8661690068A4AE /* ICar.h in Sources */,
+				BF3E03BF1D865E790068A4AE /* main.cpp in Sources */,
+				BF3E03D91D86617E0068A4AE /* IDriver.h in Sources */,
+				BF3E03CD1D8660300068A4AE /* RaceCar.h in Sources */,
+				BF3E03D51D86612A0068A4AE /* Factory.h in Sources */,
+				BF3E03D31D8660DF0068A4AE /* RaceDriver.h in Sources */,
+				BF3E03C61D865F490068A4AE /* NormalCar.h in Sources */,
+				BF3E03CF1D8660420068A4AE /* VintageCar.h in Sources */,
+				BF3E03D11D8660A10068A4AE /* Driver.h in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		BF3E03C01D865E790068A4AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		BF3E03C11D865E790068A4AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		BF3E03C31D865E790068A4AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				New_Setting = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		BF3E03C41D865E790068A4AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				New_Setting = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BF3E03B61D865E780068A4AE /* Build configuration list for PBXProject "InterfaceUtilizing" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF3E03C01D865E790068A4AE /* Debug */,
+				BF3E03C11D865E790068A4AE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BF3E03C21D865E790068A4AE /* Build configuration list for PBXNativeTarget "InterfaceUtilizing" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF3E03C31D865E790068A4AE /* Debug */,
+				BF3E03C41D865E790068A4AE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BF3E03B31D865E780068A4AE /* Project object */;
+}
